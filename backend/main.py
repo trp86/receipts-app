@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from telegram_handler import process_telegram_update
 from image_service import download_image
+from ocr_service import extract_text
 import logging
 import sys
 import os
@@ -44,8 +45,14 @@ async def webhook(request: Request):
         try:
             image_bytes = download_image(TELEGRAM_BOT_TOKEN, extracted_data["file_id"])
             logger.info(f"Image downloaded successfully: {len(image_bytes)} bytes")
+
+            # Extract text using OCR
+            text = extract_text(image_bytes)
+            logger.info(f"OCR extraction complete: {len(text)} characters")
+            logger.info(f"Full extracted text:\n{text}")
+
         except Exception as e:
-            logger.error(f"Image download failed: {e}")
+            logger.error(f"Processing failed: {e}")
     else:
         logger.info("No photo to download")
 
