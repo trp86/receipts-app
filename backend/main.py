@@ -1,7 +1,12 @@
 from fastapi import FastAPI, Request
 from telegram_handler import process_telegram_update
+from image_service import download_image
 import logging
 import sys
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -10,6 +15,10 @@ logging.basicConfig(
     force=True
 )
 logger = logging.getLogger(__name__)
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+if not TELEGRAM_BOT_TOKEN:
+    logger.error("TELEGRAM_BOT_TOKEN not set in environment")
 
 app = FastAPI()
 
@@ -20,15 +29,25 @@ async def webhook(request: Request):
     Telegram webhook endpoint.
 
     Receives photo updates from Telegram bot.
-    Logs payload and extracts photo metadata.
+    Downloads image and processes it.
     """
     logger.info("=== WEBHOOK CALLED ===")
     update_data = await request.json()
     logger.info(f"Received update_id: {update_data.get('update_id')}")
 
-    # Process the update
+    # Extract chat_id and file_id
     extracted_data = process_telegram_update(update_data)
     logger.info(f"Extraction result: {extracted_data}")
+
+    # Download image if photo exists
+    if extracted_data.get("file_id"):
+        try:
+            image_bytes = download_image(TELEGRAM_BOT_TOKEN, extracted_data["file_id"])
+            logger.info(f"Image downloaded successfully: {len(image_bytes)} bytes")
+        except Exception as e:
+            logger.error(f"Image download failed: {e}")
+    else:
+        logger.info("No photo to download")
 
     # Acknowledge receipt to Telegram
     return {"status": "ok"}
