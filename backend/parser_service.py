@@ -34,7 +34,7 @@ def parse_receipt_image(image_bytes: bytes) -> dict:
     Raises:
         Exception: If parsing fails
     """
-    logger.info("Starting receipt parsing with Google Gemini 2.0 Flash")
+    logger.info("Starting receipt parsing with Google Gemini 1.5 Flash")
 
     google_api_key = os.getenv("GOOGLE_API_KEY")
     if not google_api_key:
@@ -65,9 +65,9 @@ Extract ALL items you can see. If you cannot find a field, use empty string "" o
 Return ONLY the JSON object, nothing else."""
 
     try:
-        # Use Gemini 2.0 Flash
-        model = genai.GenerativeModel('gemini-2.0-flash-exp')
-        logger.info("Calling Google Gemini 2.0 Flash...")
+        # Use Gemini 1.5 Flash (stable)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        logger.info("Calling Google Gemini 1.5 Flash...")
 
         response = model.generate_content([prompt, image])
         llm_output = response.text.strip()
