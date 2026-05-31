@@ -70,7 +70,7 @@ Return ONLY the extracted raw text."""
     # Step 2: Parse extracted text to JSON
     parse_prompt = """You are a receipt parser. Take this raw receipt text and extract ALL available information into structured data.
 
-Return ONLY a valid JSON object with this structure (include all fields you can find, use null for missing data):
+Return ONLY a valid JSON object with EXACTLY this structure (use null for missing fields):
 
 {
   "store": {
@@ -88,7 +88,7 @@ Return ONLY a valid JSON object with this structure (include all fields you can 
     "tax_id": "tax ID"
   },
   "receipt": {
-    "type": "receipt type",
+    "type": "receipt type (e.g., Kundenbeleg)",
     "date": "YYYY-MM-DD",
     "time": "HH:MM:SS",
     "receipt_number": "receipt number",
@@ -102,53 +102,42 @@ Return ONLY a valid JSON object with this structure (include all fields you can 
     {
       "name": "item name",
       "quantity": 1.0,
-      "unit": "unit (kg, Stk, etc)",
-      "unit_price": 0.0,
-      "total_price": 0.0,
-      "tax_code": "tax code"
+      "unit": "kg or Stk or null if not applicable",
+      "unit_price": 1.99,
+      "total_price": 1.99,
+      "tax_code": "A or B or C"
     }
   ],
   "totals": {
     "currency": "EUR",
-    "sum": 0.0,
-    "paid_amount": 0.0,
-    "payment_method": "payment method"
-  },
-  "payment": {
-    "type": "payment type",
-    "card_scheme": "card type",
-    "masked_card_number": "masked number",
-    "terminal_id": "terminal ID",
-    "status": "APPROVED/DECLINED"
+    "sum": 10.26,
+    "paid_amount": 10.26,
+    "payment_method": "Card or Cash or other"
   },
   "tax": {
-    "vat_rate_percent": 0.0,
-    "net_amount": 0.0,
-    "tax_amount": 0.0,
-    "gross_amount": 0.0
+    "vat_rate_percent": 7.0,
+    "net_amount": 9.59,
+    "tax_amount": 0.67,
+    "gross_amount": 10.26
   },
   "loyalty": {
     "program": "loyalty program name",
-    "earned_today": 0.0,
-    "current_balance": 0.0
-  },
-  "footer_text": {
-    "thank_you_message": "thank you message",
-    "additional_info": "any other footer text"
+    "earned_today": 0.10,
+    "current_balance": 1.70
   }
 }
 
 CRITICAL INSTRUCTIONS:
-- Extract EVERY piece of data you can find
-- Look for ALL items with quantities, units, prices
-- Extract payment details (card type, terminal, approval status)
-- Extract tax breakdown (rate, net, tax amount, gross)
-- Extract store info (name, address, phone, email, tax ID)
-- Extract receipt metadata (date, time, numbers, IDs)
-- Extract loyalty/bonus information if present
-- Extract footer messages
-- If a field is not found, use null
-- Return ONLY the JSON object, no markdown."""
+- Extract EVERY item listed on the receipt
+- For each item, extract: name, quantity (default 1 if not shown), unit (kg/Stk/null), unit_price (if shown), total_price, tax_code
+- Extract store: full name, complete address (street, postal_code, city, country), phone, email, tax_id
+- Extract receipt metadata: type, date (YYYY-MM-DD), time (HH:MM:SS), all numbers and IDs
+- Extract totals: currency, sum, paid_amount, payment_method
+- Extract tax: VAT rate %, net amount, tax amount, gross amount
+- Extract loyalty: program name, points earned today, current balance
+- Use null for missing fields, NOT empty strings
+- Return numbers as numbers, not strings (e.g., 10.26 not "10.26")
+- Return ONLY the JSON object, no markdown, no explanation."""
 
     try:
         model = genai.GenerativeModel('gemini-2.5-flash')
