@@ -2,7 +2,7 @@ import logging
 import sys
 import json
 import os
-from openai import OpenAI
+import requests
 
 logging.basicConfig(
     level=logging.INFO,
@@ -39,12 +39,6 @@ def parse_receipt_text(ocr_text: str) -> dict:
         logger.error("OPENROUTER_API_KEY not set in environment")
         raise Exception("OPENROUTER_API_KEY not configured")
 
-    # Initialize OpenAI client with OpenRouter endpoint
-    client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=openrouter_api_key
-    )
-
     # Prompt for LLM
     prompt = f"""You are a receipt parser. Extract the following information from this receipt text and return ONLY a valid JSON object (no markdown, no explanation):
 
@@ -64,19 +58,31 @@ Receipt text:
 
 Return ONLY the JSON object, nothing else."""
 
-    try:
-        # Call OpenRouter API (using free Llama model)
-        response = client.chat.completions.create(
-            model="meta-llama/llama-3.1-8b-instruct:free",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.1,
-            max_tokens=500
-        )
+    # OpenRouter API endpoint
+    url = "https://openrouter.ai/api/v1/chat/completions"
 
-        # Extract response
-        llm_output = response.choices[0].message.content.strip()
+    headers = {
+        "Authorization": f"Bearer {openrouter_api_key}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "meta-llama/llama-3.1-8b-instruct:free",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.1,
+        "max_tokens": 500
+    }
+
+    try:
+        # Call OpenRouter API
+        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+
+        response_data = response.json()
+        llm_output = response_data["choices"][0]["message"]["content"].strip()
+
         logger.info(f"LLM raw response: {llm_output[:200]}...")
 
         # Parse JSON from response
@@ -101,6 +107,10 @@ Return ONLY the JSON object, nothing else."""
         logger.error(f"Failed to parse LLM response as JSON: {e}")
         logger.error(f"LLM output was: {llm_output}")
         raise Exception(f"JSON parsing failed: {e}")
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"OpenRouter API request failed: {e}")
+        raise Exception(f"OpenRouter API request failed: {e}")
 
     except Exception as e:
         logger.error(f"Receipt parsing failed: {e}")
