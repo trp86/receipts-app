@@ -48,8 +48,27 @@ def parse_receipt_image(image_bytes: bytes) -> dict:
     image = Image.open(io.BytesIO(image_bytes))
     logger.info(f"Image loaded: {image.format} {image.size}")
 
-    # Prompt for vision model
-    prompt = """You are a receipt parser. Carefully read this receipt image and extract EVERY SINGLE ITEM with its price.
+    # Step 1: Extract ALL text from image
+    ocr_prompt = """You are an OCR text extraction system.
+
+Extract ALL visible text from this receipt image.
+
+IMPORTANT RULES:
+- Capture EVERY piece of text visible in the image
+- Do NOT summarize
+- Do NOT interpret or structure the data
+- Do NOT convert to JSON
+- Preserve original layout as much as possible
+- Keep line breaks
+- Keep order of text as seen in the image
+- Include ALL numbers, prices, totals, dates, IDs, addresses
+
+If text is unclear, make the best possible guess, but DO NOT skip it.
+
+Return ONLY the extracted raw text."""
+
+    # Step 2: Parse extracted text to JSON
+    parse_prompt = """You are a receipt parser. Take this raw receipt text and extract structured data.
 
 Return ONLY a valid JSON object (no markdown, no explanation):
 
@@ -63,23 +82,28 @@ Return ONLY a valid JSON object (no markdown, no explanation):
 }
 
 IMPORTANT:
-- Extract EVERY item listed on the receipt, including small items, taxes, discounts
+- Extract EVERY item listed, including small items, taxes, discounts
 - Look carefully for all line items from top to bottom
-- If you see a quantity like "2x Item", create separate entries or note the quantity
 - Include everything before the total amount
 - If you cannot find a field, use empty string "" or empty array []
 
 Return ONLY the JSON object, nothing else."""
 
     try:
-        # Use Gemini 2.5 Flash
         model = genai.GenerativeModel('gemini-2.5-flash')
-        logger.info("Calling Google Gemini 2.5 Flash...")
 
-        response = model.generate_content([prompt, image])
-        llm_output = response.text.strip()
+        # Step 1: Extract ALL text (API call 1)
+        logger.info("Step 1: Extracting ALL text from image...")
+        ocr_response = model.generate_content([ocr_prompt, image])
+        raw_text = ocr_response.text.strip()
+        logger.info(f"Extracted text ({len(raw_text)} chars):\n{raw_text[:500]}...")
 
-        logger.info(f"Gemini response: {llm_output[:200]}...")
+        # Step 2: Parse text to JSON (API call 2)
+        logger.info("Step 2: Parsing text to JSON...")
+        parse_response = model.generate_content(f"{parse_prompt}\n\nReceipt text:\n{raw_text}")
+        llm_output = parse_response.text.strip()
+
+        logger.info(f"Gemini parse response: {llm_output[:200]}...")
 
         # Parse JSON from response
         # Remove markdown code blocks if present
