@@ -79,7 +79,15 @@ Return ONLY the JSON object, nothing else."""
 
     try:
         # Call OpenRouter API
+        logger.info(f"Calling OpenRouter with model: {payload['model']}")
         response = requests.post(url, headers=headers, json=payload, timeout=30)
+
+        # Log response details for debugging
+        logger.info(f"OpenRouter response status: {response.status_code}")
+
+        if response.status_code != 200:
+            logger.error(f"OpenRouter error response: {response.text}")
+
         response.raise_for_status()
 
         response_data = response.json()
