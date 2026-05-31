@@ -49,7 +49,9 @@ def parse_receipt_image(image_bytes: bytes) -> dict:
     logger.info(f"Image loaded: {image.format} {image.size}")
 
     # Prompt for vision model
-    prompt = """You are a receipt parser. Look at this receipt image and extract the following information. Return ONLY a valid JSON object (no markdown, no explanation):
+    prompt = """You are a receipt parser. Carefully read this receipt image and extract EVERY SINGLE ITEM with its price.
+
+Return ONLY a valid JSON object (no markdown, no explanation):
 
 {
   "store_name": "store name from receipt",
@@ -60,7 +62,12 @@ def parse_receipt_image(image_bytes: bytes) -> dict:
   ]
 }
 
-Extract ALL items you can see. If you cannot find a field, use empty string "" or empty array [].
+IMPORTANT:
+- Extract EVERY item listed on the receipt, including small items, taxes, discounts
+- Look carefully for all line items from top to bottom
+- If you see a quantity like "2x Item", create separate entries or note the quantity
+- Include everything before the total amount
+- If you cannot find a field, use empty string "" or empty array []
 
 Return ONLY the JSON object, nothing else."""
 
