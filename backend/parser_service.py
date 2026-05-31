@@ -3,6 +3,7 @@ import sys
 import json
 import os
 import requests
+import time
 
 logging.basicConfig(
     level=logging.INFO,
@@ -78,17 +79,36 @@ Return ONLY the JSON object, nothing else."""
     }
 
     try:
-        # Call OpenRouter API
-        logger.info(f"Calling OpenRouter with model: {payload['model']}")
-        response = requests.post(url, headers=headers, json=payload, timeout=30)
+        # Call OpenRouter API with retry logic
+        max_retries = 2
+        retry_count = 0
 
-        # Log response details for debugging
-        logger.info(f"OpenRouter response status: {response.status_code}")
+        while retry_count <= max_retries:
+            logger.info(f"Calling OpenRouter with model: {payload['model']} (attempt {retry_count + 1})")
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
 
-        if response.status_code != 200:
-            logger.error(f"OpenRouter error response: {response.text}")
+            # Log response details for debugging
+            logger.info(f"OpenRouter response status: {response.status_code}")
 
-        response.raise_for_status()
+            if response.status_code == 429:
+                # Rate limited - check retry-after
+                error_data = response.json()
+                retry_after = error_data.get("error", {}).get("metadata", {}).get("retry_after_seconds", 15)
+
+                if retry_count < max_retries:
+                    logger.warning(f"Rate limited. Retrying after {retry_after} seconds...")
+                    time.sleep(retry_after)
+                    retry_count += 1
+                    continue
+                else:
+                    logger.error(f"Max retries reached. OpenRouter error: {response.text}")
+                    response.raise_for_status()
+
+            if response.status_code != 200:
+                logger.error(f"OpenRouter error response: {response.text}")
+
+            response.raise_for_status()
+            break
 
         response_data = response.json()
         llm_output = response_data["choices"][0]["message"]["content"].strip()
