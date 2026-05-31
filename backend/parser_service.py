@@ -70,7 +70,7 @@ Return ONLY the JSON object, nothing else."""
     }
 
     payload = {
-        "model": "google/gemini-flash-1.5:free",
+        "model": "openai/gpt-oss-120b:free",
         "messages": [
             {"role": "user", "content": prompt}
         ],
