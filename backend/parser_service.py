@@ -69,7 +69,7 @@ Return ONLY the JSON object, nothing else."""
     }
 
     payload = {
-        "model": "moonshotai/kimi-k2.6:free",
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
         "messages": [
             {"role": "user", "content": prompt}
         ],
