@@ -69,7 +69,7 @@ Return ONLY the JSON object, nothing else."""
     }
 
     payload = {
-        "model": "openai/gpt-4o-mini",
+        "model": "moonshotai/kimi-k2.6:free",
         "messages": [
             {"role": "user", "content": prompt}
         ],
