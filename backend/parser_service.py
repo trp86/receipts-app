@@ -70,7 +70,7 @@ Return ONLY the JSON object, nothing else."""
     }
 
     payload = {
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "model": "google/gemini-flash-1.5:free",
         "messages": [
             {"role": "user", "content": prompt}
         ],
