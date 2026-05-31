@@ -63,7 +63,9 @@ Return ONLY the JSON object, nothing else."""
 
     headers = {
         "Authorization": f"Bearer {openrouter_api_key}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://receipts-app-v1co.onrender.com",
+        "X-Title": "Receipt Processing App"
     }
 
     payload = {
