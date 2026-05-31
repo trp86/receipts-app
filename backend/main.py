@@ -1,8 +1,7 @@
 from fastapi import FastAPI, Request
 from telegram_handler import process_telegram_update
 from image_service import download_image
-from ocr_service import extract_text
-from parser_service import parse_receipt_text
+from parser_service import parse_receipt_image
 import logging
 import sys
 import os
@@ -47,14 +46,9 @@ async def webhook(request: Request):
             image_bytes = download_image(TELEGRAM_BOT_TOKEN, extracted_data["file_id"])
             logger.info(f"Image downloaded successfully: {len(image_bytes)} bytes")
 
-            # Extract text using OCR
-            text = extract_text(image_bytes)
-            logger.info(f"OCR extraction complete: {len(text)} characters")
-            logger.info(f"Full extracted text:\n{text}")
-
-            # Parse text into JSON
-            receipt_data = parse_receipt_text(text)
-            logger.info(f"Parsing complete!")
+            # Parse image directly with vision model (skip OCR)
+            receipt_data = parse_receipt_image(image_bytes)
+            logger.info(f"Vision parsing complete!")
             logger.info(f"Structured receipt data: {receipt_data}")
 
         except Exception as e:

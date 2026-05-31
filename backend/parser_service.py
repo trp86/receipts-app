@@ -4,6 +4,7 @@ import json
 import os
 import requests
 import time
+import base64
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,12 +15,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def parse_receipt_text(ocr_text: str) -> dict:
+def parse_receipt_image(image_bytes: bytes) -> dict:
     """
-    Parse OCR text into structured JSON using OpenRouter LLM.
+    Parse receipt image directly using vision-capable LLM.
 
     Args:
-        ocr_text: Raw text extracted from receipt image
+        image_bytes: Receipt image as bytes
 
     Returns:
         dict: Structured receipt data
@@ -33,29 +34,30 @@ def parse_receipt_text(ocr_text: str) -> dict:
     Raises:
         Exception: If parsing fails
     """
-    logger.info("Starting receipt parsing with OpenRouter")
+    logger.info("Starting receipt parsing with vision model")
 
     openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
     if not openrouter_api_key:
         logger.error("OPENROUTER_API_KEY not set in environment")
         raise Exception("OPENROUTER_API_KEY not configured")
 
-    # Prompt for LLM
-    prompt = f"""You are a receipt parser. Extract the following information from this receipt text and return ONLY a valid JSON object (no markdown, no explanation):
+    # Convert image to base64
+    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+    logger.info(f"Image encoded to base64 ({len(image_base64)} chars)")
 
-{{
+    # Prompt for vision model
+    prompt = """You are a receipt parser. Look at this receipt image and extract the following information. Return ONLY a valid JSON object (no markdown, no explanation):
+
+{
   "store_name": "store name from receipt",
   "total_amount": "total amount as string with decimal",
   "date": "date in YYYY-MM-DD format",
   "items": [
-    {{"name": "item name", "price": "item price as string"}}
+    {"name": "item name", "price": "item price as string"}
   ]
-}}
+}
 
-If you cannot find a field, use empty string "" or empty array [].
-
-Receipt text:
-{ocr_text}
+Extract ALL items you can see. If you cannot find a field, use empty string "" or empty array [].
 
 Return ONLY the JSON object, nothing else."""
 
@@ -70,12 +72,23 @@ Return ONLY the JSON object, nothing else."""
     }
 
     payload = {
-        "model": "openai/gpt-oss-120b:free",
+        "model": "openai/gpt-4o-mini",
         "messages": [
-            {"role": "user", "content": prompt}
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{image_base64}"
+                        }
+                    }
+                ]
+            }
         ],
         "temperature": 0.1,
-        "max_tokens": 500
+        "max_tokens": 1000
     }
 
     try:
