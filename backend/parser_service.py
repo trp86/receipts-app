@@ -68,7 +68,7 @@ LANGUAGE & INTELLIGENT CORRECTION:
 - Preserve original spelling if you're confident it's correct, even if unusual
 - Use common sense: a grocery receipt won't have random gibberish
 
-Return ONLY a valid JSON object with EXACTLY this structure (use null for missing fields):
+Return ONLY a valid JSON object with EXACTLY this structure (extract ALL available data, use null for missing fields):
 
 {
   "store": {
@@ -81,7 +81,8 @@ Return ONLY a valid JSON object with EXACTLY this structure (use null for missin
     },
     "contact": {
       "phone": "phone number",
-      "email": "email"
+      "email": "email",
+      "website": "website if visible"
     },
     "tax_id": "tax ID"
   },
@@ -103,14 +104,26 @@ Return ONLY a valid JSON object with EXACTLY this structure (use null for missin
       "unit": "kg or Stk or null",
       "unit_price": 1.99,
       "total_price": 1.99,
-      "tax_code": "A or B or C"
+      "tax_code": "A or B or C",
+      "additional_info": "any extra item details"
     }
   ],
   "totals": {
     "currency": "EUR",
     "sum": 10.26,
     "paid_amount": 10.26,
+    "change": 0.0,
     "payment_method": "Card or Cash or other"
+  },
+  "payment": {
+    "type": "Contactless, Chip, Cash, etc",
+    "card_scheme": "DEBIT MASTERCARD, VISA, etc",
+    "masked_card_number": "masked card number",
+    "vu_number": "VU number",
+    "terminal_id": "terminal ID",
+    "pos_info": "POS info",
+    "authorization_code": "auth code",
+    "status": "APPROVED or other"
   },
   "tax": {
     "vat_rate_percent": 7.0,
@@ -121,21 +134,43 @@ Return ONLY a valid JSON object with EXACTLY this structure (use null for missin
   "loyalty": {
     "program": "loyalty program name",
     "earned_today": 0.10,
-    "current_balance": 1.70
-  }
+    "current_balance": 1.70,
+    "card_number": "loyalty card number",
+    "notes": "loyalty program notes"
+  },
+  "tse": {
+    "signature": "TSE signature",
+    "signature_counter": "signature counter number",
+    "transaction_number": "transaction number",
+    "start_time": "start timestamp",
+    "stop_time": "stop timestamp",
+    "serial_number": "serial number"
+  },
+  "footer_text": {
+    "thank_you_message": "thank you message",
+    "delivery_note": "delivery or service information",
+    "promotional_text": "any promotional messages",
+    "additional_info": "any other footer information",
+    "return_policy": "return policy if mentioned"
+  },
+  "raw_text": "any other text not fitting above categories"
 }
 
-EXTRACTION INSTRUCTIONS:
-- Read the receipt image carefully
-- Extract EVERY item listed on the receipt
-- For each item: name (corrected), quantity (default 1), unit (kg/Stk/null), unit_price, total_price, tax_code
-- Extract store: full name, complete address, phone, email, tax_id
-- Extract receipt metadata: type, date (YYYY-MM-DD), time (HH:MM:SS), all IDs
-- Extract totals: currency, sum, paid_amount, payment_method
-- Extract tax: VAT rate %, net, tax, gross amounts
-- Extract loyalty: program, earned today, current balance
+EXTRACTION INSTRUCTIONS - EXTRACT EVERYTHING:
+- Read the ENTIRE receipt image from top to bottom carefully
+- Extract EVERY item listed with: name (corrected), quantity, unit, unit_price, total_price, tax_code
+- Extract store: full name, complete address, phone, email, website, tax_id
+- Extract receipt metadata: type, date (YYYY-MM-DD), time (HH:MM:SS), ALL numbers and IDs
+- Extract totals: currency, sum, paid_amount, change, payment_method
+- Extract payment details: type (Contactless/Chip/Cash), card_scheme, masked number, terminal_id, VU number, POS info, auth code, status
+- Extract tax: VAT rate %, net amount, tax amount, gross amount
+- Extract loyalty: program name, earned today, current balance, card number, notes
+- Extract TSE/signature: signature, counter, transaction number, timestamps, serial number
+- Extract footer: thank you messages, delivery notes, promotional text, return policy, any other footer information
+- Extract raw_text: capture ANY text that doesn't fit in the above categories
 - Use null for missing fields
 - Return numbers as numbers (10.26 not "10.26")
+- BE COMPREHENSIVE - if you see text on the receipt, extract it somewhere in the JSON
 - Return ONLY the JSON object, no markdown, no explanation."""
 
     try:
