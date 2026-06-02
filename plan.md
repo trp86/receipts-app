@@ -24,5 +24,8 @@
 - Created db_service.py with JSONB table
 - Integrated into main.py
 
-## Phase 6: Response
+## Phase 6: Response ✅
 - Send JSON back to Telegram
+- Created response_service.py
+- Format receipt as user-friendly message
+- Send via Telegram Bot API

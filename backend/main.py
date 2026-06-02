@@ -3,6 +3,7 @@ from telegram_handler import process_telegram_update
 from image_service import download_image
 from parser_service import parse_receipt_image
 from db_service import init_database, insert_receipt
+from response_service import send_receipt_response
 import logging
 import sys
 import os
@@ -67,6 +68,9 @@ async def webhook(request: Request):
             if chat_id and receipt_data:
                 receipt_id = insert_receipt(chat_id, receipt_data)
                 logger.info(f"Receipt stored in database with ID: {receipt_id}")
+
+                # Send response back to Telegram
+                send_receipt_response(TELEGRAM_BOT_TOKEN, chat_id, receipt_data, receipt_id)
 
         except Exception as e:
             logger.error(f"Processing failed: {e}")
