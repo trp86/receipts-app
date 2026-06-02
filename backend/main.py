@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from telegram_handler import process_telegram_update
 from image_service import download_image
 from parser_service import parse_receipt_image
+from db_service import init_database, insert_receipt
 import logging
 import sys
 import os
@@ -22,6 +23,16 @@ if not TELEGRAM_BOT_TOKEN:
     logger.error("TELEGRAM_BOT_TOKEN not set in environment")
 
 app = FastAPI()
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Initializing database schema")
+    try:
+        init_database()
+        logger.info("Database ready")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
 
 
 @app.post("/webhook")
@@ -50,6 +61,12 @@ async def webhook(request: Request):
             receipt_data = parse_receipt_image(image_bytes)
             logger.info(f"Vision parsing complete!")
             logger.info(f"Structured receipt data: {receipt_data}")
+
+            # Store in database
+            chat_id = extracted_data.get("chat_id")
+            if chat_id and receipt_data:
+                receipt_id = insert_receipt(chat_id, receipt_data)
+                logger.info(f"Receipt stored in database with ID: {receipt_id}")
 
         except Exception as e:
             logger.error(f"Processing failed: {e}")

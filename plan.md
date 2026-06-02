@@ -8,6 +8,7 @@
 ## Phase 1B: Implement Webhook Endpoint
 ## Phase 1C: Validate Photo Input
 
+
 ## Phase 2: Image Processing
 - Download image
 - Pass to OCR
@@ -18,8 +19,10 @@
 ## Phase 4: JSON extraction
 - Parse receipt
 
-## Phase 5: Database
+## Phase 5: Database ✅
 - Store in Neon
+- Created db_service.py with JSONB table
+- Integrated into main.py
 
 ## Phase 6: Response
 - Send JSON back to Telegram
