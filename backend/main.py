@@ -58,7 +58,7 @@ async def webhook(request: Request):
             image_bytes = download_image(TELEGRAM_BOT_TOKEN, extracted_data["file_id"])
             logger.info(f"Image downloaded successfully: {len(image_bytes)} bytes")
 
-            # Parse image directly with vision model (skip OCR)
+            # Parse image with Gemini Vision model
             receipt_data = parse_receipt_image(image_bytes)
             logger.info(f"Vision parsing complete!")
             logger.info(f"Structured receipt data: {receipt_data}")

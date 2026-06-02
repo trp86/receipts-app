@@ -54,7 +54,7 @@ def parse_receipt_image(image_bytes: bytes) -> dict:
 LANGUAGE & INTELLIGENT CORRECTION:
 - This is a GERMAN receipt from Germany
 - Receipt text is in German language
-- If text is unclear, blurry, or has OCR-like errors, use your intelligence to correct it
+- If text is unclear or blurry, use your intelligence to correct it
 - Apply German language knowledge to fix typos and errors:
   * "apppl" or "aple" → "Apfel"
   * "mlch" or "milch" → "Milch"

@@ -4,10 +4,10 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including Tesseract
-RUN apt-get update && apt-get install -y \
-    tesseract-ocr \
-    && rm -rf /var/lib/apt/lists/*
+# Install system dependencies (if needed)
+# RUN apt-get update && apt-get install -y \
+#     <package-name> \
+#     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .

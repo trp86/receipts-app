@@ -1,15 +1,15 @@
 # Receipt Processing MVP
 
-This project captures receipt images via Telegram bot and processes them using OCR.
+This project captures receipt images via Telegram bot and processes them using Gemini Vision AI.
 
 ## Flow
-Telegram → Backend → OCR → JSON → Database → Telegram
+Telegram → Backend → Gemini Vision → Database → Telegram
 
 ## Stack
 - FastAPI (backend)
 - Render (hosting)
-- Neon (database)
-- Tesseract OCR
+- Neon PostgreSQL (database)
+- Google Gemini 2.5 Flash (vision parsing)
 
 ## Goal
 Build a simple, cloud-only, free MVP.

@@ -9,12 +9,13 @@
 ## Phase 1C: Validate Photo Input
 
 
-## Phase 2: Image Processing
-- Download image
-- Pass to OCR
 
-## Phase 3: OCR
-- Extract text
+## Phase 2: Image Processing ✅
+- Download image
+- Pass to parser
+
+## Phase 3: Vision Parsing ✅
+- Extract data with Gemini Vision
 
 ## Phase 4: JSON extraction
 - Parse receipt

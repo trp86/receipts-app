@@ -8,7 +8,7 @@ Usage:
 
 import requests
 
-WEBHOOK_URL = "http://localhost:8000/webhook"
+WEBHOOK_URL = "http://localhost:8080/webhook"
 
 
 def test_with_photo():
@@ -87,7 +87,7 @@ def test_health_check():
     print("\n=== Test 3: Health check ===")
 
     try:
-        response = requests.get("http://localhost:8000/")
+        response = requests.get("http://localhost:8080/")
         print(f"Status Code: {response.status_code}")
         print(f"Response: {response.json()}")
     except Exception as e:

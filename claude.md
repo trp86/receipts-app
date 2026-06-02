@@ -8,10 +8,9 @@ Build a cloud-only MVP system that:
 
 1. Receives receipt images via Telegram bot
 2. Processes the image in a cloud backend (Render)
-3. Extracts text using OCR
-4. Converts text into structured JSON
-5. Stores data in Neon PostgreSQL
-6. Sends parsed JSON back to Telegram
+3. Extracts structured data using Gemini Vision
+4. Stores data in Neon PostgreSQL
+5. Sends parsed receipt back to Telegram
 
 ---
 
@@ -21,9 +20,7 @@ Telegram Bot
     ↓
 FastAPI Backend (Render)
     ↓
-OCR (in-memory, no file persistence)
-    ↓
-Parser (text → JSON)
+Gemini Vision Parser (image → structured JSON)
     ↓
 Neon PostgreSQL (persistent storage)
     ↓
@@ -58,9 +55,9 @@ Telegram Response
 Modules must be independent:
 
 - Telegram: communication only
-- OCR: extract raw text only
-- Parser: convert text to JSON only
+- Parser: extract structured data from image only
 - DB: insert + query only
+- Response: format and send message only
 
 NO mixing responsibilities
 
@@ -85,10 +82,9 @@ Backend must be structured in modules:
 
 1. telegram_handler → webhook + message parsing
 2. image_service → fetch image from Telegram
-3. ocr_service → image → text
-4. parser_service → text → JSON
-5. db_service → Neon DB interaction
-6. response_service → send result back to Telegram
+3. parser_service → image → structured JSON (Gemini Vision)
+4. db_service → Neon DB interaction
+5. response_service → send result back to Telegram
 
 ---
 
@@ -168,7 +164,7 @@ DO NOT:
 ## 🚫 Forbidden Actions
 
 - NO full system generation
-- NO combining OCR + parsing + DB in one function
+- NO combining parsing + DB in one function
 - NO local file storage
 - NO background jobs (free tier incompatible)
 - NO Docker optimization yet
@@ -181,11 +177,10 @@ DO NOT:
 
 1. Telegram Webhook
 2. Image Retrieval
-3. OCR Module
-4. JSON Parser
-5. Database Integration
-6. Telegram Response
-7. End-to-End flow
+3. Vision Parser (Gemini)
+4. Database Integration
+5. Telegram Response
+6. End-to-End flow
 
 ---
 
