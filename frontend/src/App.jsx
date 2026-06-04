@@ -9,9 +9,10 @@ function App() {
   const [view, setView] = useState('camera'); // 'camera' | 'loading' | 'result'
   const [receiptData, setReceiptData] = useState(null);
   const [error, setError] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePhotoCapture = async (imageData) => {
-    setView('loading');
+    setIsProcessing(true);
     setError(null);
 
     try {
@@ -29,6 +30,8 @@ function App() {
       console.error('Upload failed:', err);
       setError(err.message || 'Failed to process receipt. Please try again.');
       setView('camera');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -36,6 +39,7 @@ function App() {
     setView('camera');
     setReceiptData(null);
     setError(null);
+    setIsProcessing(false);
   };
 
   return (
@@ -46,7 +50,7 @@ function App() {
 
       <main className="app-main">
         {view === 'camera' && (
-          <Camera onCapture={handlePhotoCapture} />
+          <Camera onCapture={handlePhotoCapture} isProcessing={isProcessing} />
         )}
 
         {view === 'loading' && (

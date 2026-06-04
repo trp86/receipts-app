@@ -33,7 +33,9 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://app-receiptscan.netlify.app",
-        "http://app-receiptscan.netlify.app"
+        "http://app-receiptscan.netlify.app",
+        "https://lovely-selkie-5a9946.netlify.app",
+        "http://lovely-selkie-5a9946.netlify.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],

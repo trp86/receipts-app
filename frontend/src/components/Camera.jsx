@@ -1,18 +1,34 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import Webcam from 'react-webcam';
 
-function Camera({ onCapture }) {
+function Camera({ onCapture, isProcessing }) {
   const webcamRef = useRef(null);
   const fileInputRef = useRef(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [cameraAttempt, setCameraAttempt] = useState(0);
+
+  // Detect if device is mobile
+  useEffect(() => {
+    const checkMobile = window.innerWidth <= 768 ||
+                        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    setIsMobile(checkMobile);
+  }, []);
 
   const handleUserMedia = () => {
     setHasPermission(true);
   };
 
-  const handleUserMediaError = () => {
-    setHasPermission(false);
+  const handleUserMediaError = (error) => {
+    console.error('Camera error:', error);
+    // If first attempt failed on mobile, try fallback
+    if (cameraAttempt === 0 && isMobile) {
+      console.log('Retrying with fallback camera...');
+      setCameraAttempt(1);
+    } else {
+      setHasPermission(false);
+    }
   };
 
   const capturePhoto = () => {
@@ -45,17 +61,40 @@ function Camera({ onCapture }) {
     fileInputRef.current?.click();
   };
 
-  const videoConstraints = {
-    facingMode: { ideal: 'environment' }, // Use rear camera on mobile
-    width: { ideal: 1920 },
-    height: { ideal: 1080 }
-  };
+  // Adaptive video constraints with fallback
+  const videoConstraints = useMemo(() => {
+    const baseConstraints = {
+      width: { ideal: 1920 },
+      height: { ideal: 1080 }
+    };
+
+    // First attempt on mobile: try rear camera
+    if (cameraAttempt === 0 && isMobile) {
+      return {
+        ...baseConstraints,
+        facingMode: { ideal: 'environment' }
+      };
+    }
+
+    // Fallback or desktop: use any available camera
+    return baseConstraints;
+  }, [isMobile, cameraAttempt]);
 
   if (hasPermission === false) {
     return (
       <div className="camera-error">
-        <p>❌ Camera permission denied</p>
-        <p>Please enable camera access to scan receipts</p>
+        <p>❌ Camera not available</p>
+        <p>Please use Upload Image button below</p>
+        <button onClick={triggerFileInput} className="btn-upload">
+          📁 Upload Image
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          style={{ display: 'none' }}
+        />
       </div>
     );
   }
@@ -73,6 +112,9 @@ function Camera({ onCapture }) {
             <Webcam
               ref={webcamRef}
               audio={false}
+              autoPlay={true}
+              playsInline={true}
+              muted={true}
               screenshotFormat="image/jpeg"
               screenshotQuality={0.95}
               videoConstraints={videoConstraints}
@@ -80,6 +122,11 @@ function Camera({ onCapture }) {
               onUserMediaError={handleUserMediaError}
               className="webcam"
             />
+            {hasPermission && (
+              <div className="capture-guide">
+                <div className="guide-box"></div>
+              </div>
+            )}
           </div>
           <div className="camera-controls">
             <button onClick={capturePhoto} className="btn-capture">
@@ -103,13 +150,19 @@ function Camera({ onCapture }) {
             <img src={capturedImage} alt="Captured receipt" />
           </div>
           <div className="preview-controls">
-            <button onClick={handleRetake} className="btn-secondary">
-              ↺ Retake
+            <button onClick={handleRetake} className="btn-secondary" disabled={isProcessing}>
+              🔄 Retake
             </button>
-            <button onClick={handleConfirm} className="btn-primary">
-              ✓ Process Receipt
+            <button onClick={handleConfirm} className="btn-primary" disabled={isProcessing}>
+              ✅ Use Image
             </button>
           </div>
+          {isProcessing && (
+            <div className="processing-overlay">
+              <div className="spinner"></div>
+              <p>Processing receipt...</p>
+            </div>
+          )}
         </>
       )}
     </div>
