@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+python-dotenv
+requests
+psycopg2-binary
+google-generativeai
+python-multipart

@@ -1,0 +1,20 @@
+{
+  "name": "Receipt Scanner",
+  "short_name": "Receipts",
+  "description": "Scan and process receipts instantly with AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "permissions": [
+    "camera"
+  ]
+}

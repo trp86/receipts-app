@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from telegram_handler import process_telegram_update
 from image_service import download_image
 from parser_service import parse_receipt_image
@@ -24,6 +25,15 @@ if not TELEGRAM_BOT_TOKEN:
     logger.error("TELEGRAM_BOT_TOKEN not set in environment")
 
 app = FastAPI()
+
+# CORS middleware for frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize database on startup
 @app.on_event("startup")
@@ -79,6 +89,61 @@ async def webhook(request: Request):
 
     # Acknowledge receipt to Telegram
     return {"status": "ok"}
+
+
+@app.post("/api/upload")
+async def upload_receipt(file: UploadFile = File(...)):
+    """
+    Web frontend upload endpoint.
+
+    Accepts image file, processes with Gemini Vision,
+    stores in database, and returns structured data.
+    """
+    logger.info("=== WEB UPLOAD CALLED ===")
+
+    try:
+        # Read image bytes
+        image_bytes = await file.read()
+        logger.info(f"Image received: {len(image_bytes)} bytes")
+
+        # Parse image with Gemini Vision
+        receipt_data = parse_receipt_image(image_bytes)
+        logger.info(f"Vision parsing complete!")
+        logger.info(f"Structured receipt data: {receipt_data}")
+
+        # Store in database (use 0 as chat_id for web uploads)
+        if receipt_data:
+            receipt_id = insert_receipt(0, receipt_data)
+            logger.info(f"Receipt stored in database with ID: {receipt_id}")
+
+            # Transform data for frontend compatibility
+            frontend_data = {
+                "store_name": receipt_data.get("store", {}).get("name", ""),
+                "date": receipt_data.get("receipt", {}).get("date", ""),
+                "total_amount": str(receipt_data.get("totals", {}).get("sum", 0.0)),
+                "items": [
+                    {
+                        "name": item.get("name", ""),
+                        "price": str(item.get("total_price", 0.0))
+                    }
+                    for item in receipt_data.get("items", [])
+                ]
+            }
+
+            logger.info(f"Frontend data: {frontend_data}")
+
+            # Return parsed data
+            return {
+                "success": True,
+                "receipt_id": receipt_id,
+                "data": frontend_data
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Failed to parse receipt")
+
+    except Exception as e:
+        logger.error(f"Upload processing failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/")
