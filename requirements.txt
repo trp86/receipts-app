@@ -1,7 +1,7 @@
-fastapi==0.115.0
-uvicorn==0.32.0
-requests==2.31.0
-python-dotenv==1.0.0
-Pillow==11.0.0
-google-generativeai==0.8.3
-psycopg2-binary==2.9.9
+fastapi
+uvicorn
+python-dotenv
+requests
+psycopg2-binary
+google-generativeai
+python-multipart
