@@ -8,6 +8,8 @@ function Camera({ onCapture, isProcessing }) {
   const [capturedImage, setCapturedImage] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [cameraAttempt, setCameraAttempt] = useState(0);
+  const [cameraHint, setCameraHint] = useState(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   // Detect if device is mobile
   useEffect(() => {
@@ -31,9 +33,53 @@ function Camera({ onCapture, isProcessing }) {
     }
   };
 
+  // Smart camera hint detection
+  useEffect(() => {
+    if (!hasPermission || !webcamRef.current) return;
+
+    const checkVideoQuality = () => {
+      try {
+        const video = webcamRef.current.video;
+        if (!video || video.readyState < 2) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 100;
+        canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, 100, 100);
+
+        const imageData = ctx.getImageData(0, 0, 100, 100);
+        const data = imageData.data;
+        let brightness = 0;
+
+        for (let i = 0; i < data.length; i += 4) {
+          brightness += (data[i] + data[i + 1] + data[i + 2]) / 3;
+        }
+
+        brightness = brightness / (data.length / 4);
+
+        if (brightness < 80) {
+          setCameraHint('💡 Increase lighting');
+          setTimeout(() => setCameraHint(null), 3000);
+        }
+      } catch (err) {
+        // Ignore errors
+      }
+    };
+
+    const interval = setInterval(checkVideoQuality, 3000);
+    return () => clearInterval(interval);
+  }, [hasPermission]);
+
   const capturePhoto = () => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    setCapturedImage(imageSrc);
+    // Flash animation
+    setIsCapturing(true);
+
+    setTimeout(() => {
+      const imageSrc = webcamRef.current.getScreenshot();
+      setCapturedImage(imageSrc);
+      setIsCapturing(false);
+    }, 150);
   };
 
   const handleConfirm = () => {
@@ -109,6 +155,11 @@ function Camera({ onCapture, isProcessing }) {
                 <p>📷 Initializing camera...</p>
               </div>
             )}
+            {cameraHint && hasPermission && (
+              <div className="camera-hint">
+                {cameraHint}
+              </div>
+            )}
             <Webcam
               ref={webcamRef}
               audio={false}
@@ -124,16 +175,22 @@ function Camera({ onCapture, isProcessing }) {
             />
             {hasPermission && (
               <div className="capture-guide">
-                <div className="guide-box"></div>
+                <div className="guide-box">
+                  <div className="guide-corners"></div>
+                  <div className="scanning-line"></div>
+                </div>
               </div>
             )}
+            {isCapturing && <div className="capture-flash"></div>}
           </div>
-          <div className="camera-controls">
-            <button onClick={capturePhoto} className="btn-capture">
-              📸 Capture Receipt
+          <div className="camera-controls-lens">
+            <button onClick={capturePhoto} className="btn-capture-lens" title="Capture">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
             </button>
-            <button onClick={triggerFileInput} className="btn-upload">
-              📁 Upload Image
+            <button onClick={triggerFileInput} className="btn-upload-secondary">
+              📁 Upload
             </button>
             <input
               ref={fileInputRef}
@@ -146,15 +203,17 @@ function Camera({ onCapture, isProcessing }) {
         </>
       ) : (
         <>
+          <button onClick={handleRetake} className="btn-retake-corner" disabled={isProcessing} title="Retake">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/>
+            </svg>
+          </button>
           <div className="preview">
             <img src={capturedImage} alt="Captured receipt" />
           </div>
-          <div className="preview-controls">
-            <button onClick={handleRetake} className="btn-secondary" disabled={isProcessing}>
-              🔄 Retake
-            </button>
-            <button onClick={handleConfirm} className="btn-primary" disabled={isProcessing}>
-              ✅ Use Image
+          <div className="preview-controls-lens">
+            <button onClick={handleConfirm} className="btn-confirm-large" disabled={isProcessing}>
+              ✅ Use This Image
             </button>
           </div>
           {isProcessing && (
