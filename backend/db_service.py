@@ -46,26 +46,51 @@ def init_database():
     """
     logger.info("Initializing database schema")
 
-    create_table_sql = """
-    CREATE TABLE IF NOT EXISTS receipts (
-        id SERIAL PRIMARY KEY,
-        chat_id BIGINT NOT NULL,
-        store_name VARCHAR(255),
-        total_amount DECIMAL(10,2),
-        date DATE,
-        raw_json JSONB NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_chat_id ON receipts(chat_id);
-    CREATE INDEX IF NOT EXISTS idx_date ON receipts(date);
-    CREATE INDEX IF NOT EXISTS idx_store ON receipts(store_name);
-    """
-
     try:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute(create_table_sql)
+
+        # Step 1: Create base table if not exists
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS receipts (
+                id SERIAL PRIMARY KEY,
+                chat_id BIGINT,
+                store_name VARCHAR(255),
+                total_amount DECIMAL(10,2),
+                date DATE,
+                raw_json JSONB NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+
+        # Step 2: Add new columns if they don't exist
+        cursor.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                              WHERE table_name='receipts' AND column_name='user_id') THEN
+                    ALTER TABLE receipts ADD COLUMN user_id VARCHAR(255);
+                END IF;
+
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                              WHERE table_name='receipts' AND column_name='synced_to_dwh') THEN
+                    ALTER TABLE receipts ADD COLUMN synced_to_dwh BOOLEAN DEFAULT FALSE;
+                END IF;
+
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                              WHERE table_name='receipts' AND column_name='synced_at') THEN
+                    ALTER TABLE receipts ADD COLUMN synced_at TIMESTAMP;
+                END IF;
+            END $$;
+        """)
+
+        # Step 3: Create indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_chat_id ON receipts(chat_id);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_id ON receipts(user_id);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_date ON receipts(date);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_store ON receipts(store_name);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_synced ON receipts(synced_to_dwh);")
+
         conn.commit()
         cursor.close()
         conn.close()
@@ -75,22 +100,22 @@ def init_database():
         raise
 
 
-def insert_receipt(chat_id, receipt_json):
+def insert_receipt(user_id, receipt_json):
     """
     Insert parsed receipt into database.
 
     Args:
-        chat_id: Telegram chat ID
+        user_id: User identifier (web user ID or chat ID for legacy)
         receipt_json: Parsed receipt dictionary (nested structure)
 
     Returns:
         Receipt ID if successful, None otherwise
     """
-    logger.info(f"Inserting receipt for chat_id: {chat_id}")
+    logger.info(f"Inserting receipt for user_id: {user_id}")
     logger.info(f"Receipt data keys: {receipt_json.keys()}")
 
     insert_sql = """
-    INSERT INTO receipts (chat_id, store_name, total_amount, date, raw_json)
+    INSERT INTO receipts (user_id, store_name, total_amount, date, raw_json)
     VALUES (%s, %s, %s, %s, %s)
     RETURNING id;
     """
@@ -119,7 +144,7 @@ def insert_receipt(chat_id, receipt_json):
         cursor = conn.cursor()
         cursor.execute(
             insert_sql,
-            (chat_id, store_name, total_amount, date, Json(receipt_json))
+            (user_id, store_name, total_amount, date, Json(receipt_json))
         )
         receipt_id = cursor.fetchone()[0]
         conn.commit()

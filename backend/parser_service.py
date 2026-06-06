@@ -105,6 +105,8 @@ Return ONLY a valid JSON object with EXACTLY this structure (extract ALL availab
       "unit_price": 1.99,
       "total_price": 1.99,
       "tax_code": "A or B or C",
+      "category": "Dairy Products",
+      "subcategory": "Cheese",
       "additional_info": "any extra item details"
     }
   ],
@@ -156,9 +158,24 @@ Return ONLY a valid JSON object with EXACTLY this structure (extract ALL availab
   "raw_text": "any other text not fitting above categories"
 }
 
+CATEGORIZATION RULES:
+- Classify EVERY item into ONE of these categories:
+  * "Dairy Products" → milk, cheese, butter, yogurt, cream, quark, joghurt, käse, sahne, frischkäse
+  * "Meat & Fish" → beef, pork, chicken, fish, sausage, wurst, fleisch, schinken, salami, lachs
+  * "Fruits & Vegetables" → fresh produce, salads, apfel, banane, tomate, gurke, paprika, kartoffel, zwiebel, salat
+  * "Bakery" → bread, pastries, cakes, brot, brötchen, croissant, kuchen
+  * "Beverages" → water, juice, soda, coffee, tea, alcohol, wasser, saft, bier, wein, kaffee
+  * "Snacks & Sweets" → chocolate, chips, cookies, candy, schokolade, kekse, süßigkeiten
+  * "Frozen Foods" → tiefkühlkost, frozen items, eis
+  * "Pantry & Staples" → pasta, rice, canned goods, oils, spices, nudeln, reis, öl, gewürze, konserven
+  * "Household & Other" → cleaning, personal care, non-food, reinigung, hygiene, haushalt
+- Also provide a more specific subcategory (e.g., "Gouda" for "Cheese")
+- Use product knowledge: "Emmentaler" = category:"Dairy Products", subcategory:"Cheese"
+- Use product knowledge: "Coca Cola" = category:"Beverages", subcategory:"Soft Drinks"
+
 EXTRACTION INSTRUCTIONS - EXTRACT EVERYTHING:
 - Read the ENTIRE receipt image from top to bottom carefully
-- Extract EVERY item listed with: name (corrected), quantity, unit, unit_price, total_price, tax_code
+- Extract EVERY item listed with: name (corrected), quantity, unit, unit_price, total_price, tax_code, category, subcategory
 - Extract store: full name, complete address, phone, email, website, tax_id
 - Extract receipt metadata: type, date (YYYY-MM-DD), time (HH:MM:SS), ALL numbers and IDs
 - Extract totals: currency, sum, paid_amount, change, payment_method
