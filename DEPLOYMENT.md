@@ -1,161 +1,63 @@
-# Deployment Guide
+# 🚀 Deployment Guide - MotherDuck Analytics
 
-## Phase 7: Web App Deployment
+## Quick Start
 
-### Architecture
+1. Get MotherDuck token → Add to Render
+2. Push code (done ✅)
+3. Initialize star schema
+4. Run ETL to sync receipts
+5. Test!
 
-```
-User (Mobile Browser)
-    ↓
-React Frontend (PWA)
-    ↓ HTTP POST /api/upload
-FastAPI Backend
-    ↓
-Gemini Vision API
-    ↓
-Neon PostgreSQL
-```
+---
 
-## Backend Deployment (Render)
+## Step 1: Get MotherDuck Token
 
-### 1. Prepare Backend
+1. Go to https://app.motherduck.com/
+2. Click profile → Settings → Access Tokens
+3. Create Token → Copy it
 
-Already configured in `backend/main.py`:
-- `/api/upload` endpoint
-- CORS middleware
-- File upload support
+---
 
-### 2. Environment Variables
+## Step 2: Add to Render
 
-Set in Render dashboard:
-```
-TELEGRAM_BOT_TOKEN=your_token
-GEMINI_API_KEY=your_key
-NEON_DATABASE_URL=postgresql://...
-```
+1. https://dashboard.render.com/ → receipts-app-v1co
+2. Environment tab
+3. Add: MOTHERDUCK_TOKEN = <your_token>
+4. Save (auto-redeploys)
 
-### 3. Deploy Command
+---
+
+## Step 3: Verify Deployment
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port $PORT
+curl https://receipts-app-v1co.onrender.com/api/health
 ```
 
-### 4. Update CORS Origins
+Should show motherduck: token_configured
 
-After deployment, update `main.py` with production frontend URL:
+---
 
-```python
-allow_origins=[
-    "http://localhost:5173",
-    "https://your-frontend-domain.com"
-]
-```
-
-## Frontend Deployment
-
-### Option 1: Netlify (Recommended)
-
-1. **Build**
-   ```bash
-   cd frontend
-   npm run build
-   ```
-
-2. **Deploy**
-   - Connect GitHub repo to Netlify
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-   - Environment variable: `VITE_API_URL=https://your-backend.onrender.com`
-
-3. **Configure**
-   - Add `_redirects` file in `public/`:
-     ```
-     /*    /index.html   200
-     ```
-
-### Option 2: Vercel
-
-1. **Deploy**
-   ```bash
-   cd frontend
-   vercel
-   ```
-
-2. **Environment Variables**
-   ```
-   VITE_API_URL=https://your-backend.onrender.com
-   ```
-
-### Option 3: GitHub Pages
-
-1. **Build**
-   ```bash
-   npm run build
-   ```
-
-2. **Deploy**
-   ```bash
-   npm install -g gh-pages
-   gh-pages -d dist
-   ```
-
-## Post-Deployment
-
-### 1. Update Backend CORS
-
-Add production frontend URL to allowed origins.
-
-### 2. Test Upload Endpoint
+## Step 4: Initialize Star Schema
 
 ```bash
-curl -X POST https://your-backend.onrender.com/api/upload \
-  -F "file=@test.jpg"
+curl -X POST https://receipts-app-v1co.onrender.com/api/admin/init-star-schema
 ```
 
-### 3. Mobile Testing
+---
 
-- Access frontend URL on mobile device
-- Grant camera permissions
-- Test full flow
+## Step 5: Sync Existing Receipts
 
-## Production Considerations
+```bash
+curl -X POST https://receipts-app-v1co.onrender.com/api/admin/run-etl
+```
 
-### Security
-- Add rate limiting
-- Implement authentication
-- Validate file types/sizes
-- Use HTTPS only
+---
 
-### Performance
-- Add CDN for static assets
-- Implement image compression
-- Cache API responses
-- Use connection pooling for DB
+## Done! Test upload with categories
 
-### Monitoring
-- Add logging service (e.g., Sentry)
-- Monitor API response times
-- Track error rates
-- Set up uptime monitoring
+```bash
+curl -X POST https://receipts-app-v1co.onrender.com/api/upload \
+  -F "file=@receipt.jpg" -F "user_id=test"
+```
 
-## Cost Estimates (Free Tier)
-
-- **Render**: Free tier (sleeps after inactivity)
-- **Netlify**: 100GB bandwidth/month free
-- **Neon PostgreSQL**: 0.5GB storage free
-- **Gemini API**: Free tier available
-
-## Troubleshooting
-
-### CORS Errors
-- Verify backend CORS origins include frontend URL
-- Check for HTTPS/HTTP mismatch
-
-### Camera Not Working
-- Ensure HTTPS (required for camera access)
-- Check browser camera permissions
-
-### Upload Fails
-- Verify backend endpoint is accessible
-- Check file size limits
-- Review backend logs
+Check response has category/subcategory fields!

@@ -2,6 +2,8 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from parser_service import parse_receipt_image
 from db_service import init_database, insert_receipt
+from motherduck_service import init_star_schema
+from etl_job import run_etl
 import logging
 import sys
 import os
@@ -109,3 +111,96 @@ async def upload_receipt(file: UploadFile = File(...), user_id: str = None):
 async def root():
     """Health check endpoint"""
     return {"message": "Receipt Processing Backend"}
+
+
+@app.post("/api/admin/init-star-schema")
+async def admin_init_star_schema():
+    """
+    Admin endpoint to initialize MotherDuck star schema.
+    Call this once after deployment.
+    """
+    logger.info("=== ADMIN: Initializing star schema ===")
+    try:
+        init_star_schema()
+        return {"success": True, "message": "Star schema initialized"}
+    except Exception as e:
+        logger.error(f"Star schema initialization failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/admin/run-etl")
+async def admin_run_etl():
+    """
+    Admin endpoint to manually trigger ETL job.
+    Syncs unsynced receipts from Neon to MotherDuck.
+    """
+    logger.info("=== ADMIN: Running ETL job ===")
+    try:
+        synced_count = run_etl()
+        return {
+            "success": True,
+            "message": f"ETL complete: {synced_count} receipts synced"
+        }
+    except Exception as e:
+        logger.error(f"ETL job failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/health")
+async def health_check():
+    """
+    Detailed health check with service status.
+    """
+    import psycopg2
+
+    health = {
+        "status": "healthy",
+        "services": {}
+    }
+
+    # Check Neon database
+    try:
+        DATABASE_URL = os.getenv("DATABASE_URL")
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM receipts")
+        receipt_count = cursor.fetchone()[0]
+        cursor.close()
+        conn.close()
+
+        health["services"]["neon_db"] = {
+            "status": "connected",
+            "receipt_count": receipt_count
+        }
+    except Exception as e:
+        health["services"]["neon_db"] = {
+            "status": "error",
+            "error": str(e)
+        }
+        health["status"] = "degraded"
+
+    # Check MotherDuck token
+    MOTHERDUCK_TOKEN = os.getenv("MOTHERDUCK_TOKEN")
+    if MOTHERDUCK_TOKEN:
+        health["services"]["motherduck"] = {
+            "status": "token_configured"
+        }
+    else:
+        health["services"]["motherduck"] = {
+            "status": "token_missing",
+            "note": "Using local DuckDB"
+        }
+
+    # Check Gemini API key
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+    if GOOGLE_API_KEY:
+        health["services"]["gemini_api"] = {
+            "status": "configured"
+        }
+    else:
+        health["services"]["gemini_api"] = {
+            "status": "missing"
+        }
+        health["status"] = "degraded"
+
+    return health
