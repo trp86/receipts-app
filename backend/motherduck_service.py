@@ -34,13 +34,21 @@ def get_motherduck_connection():
         # Connect to MotherDuck
         # If MOTHERDUCK_TOKEN is set, DuckDB will use it automatically
         if MOTHERDUCK_TOKEN:
-            conn = duckdb.connect(f'md:receipts_analytics?motherduck_token={MOTHERDUCK_TOKEN}')
+            # First connect to default database
+            conn = duckdb.connect(f'md:?motherduck_token={MOTHERDUCK_TOKEN}')
+
+            # Create receipts_analytics database if it doesn't exist
+            conn.execute("CREATE DATABASE IF NOT EXISTS receipts_analytics")
+
+            # Switch to receipts_analytics database
+            conn.execute("USE receipts_analytics")
+
+            logger.info("MotherDuck connection established (receipts_analytics)")
         else:
             # For local development, use local DuckDB file
             conn = duckdb.connect('receipts_analytics.duckdb')
             logger.warning("MOTHERDUCK_TOKEN not set, using local DuckDB file")
 
-        logger.info("MotherDuck connection established")
         return conn
     except Exception as e:
         logger.error(f"MotherDuck connection failed: {e}")
