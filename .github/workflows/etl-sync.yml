@@ -1,0 +1,45 @@
+name: ETL Sync - Neon to MotherDuck
+
+on:
+  # Run every hour
+  schedule:
+    - cron: '0 * * * *'  # Every hour at :00
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  sync-receipts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger ETL Job
+        run: |
+          echo "🔄 Triggering ETL sync..."
+
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            https://receipts-app-v1co.onrender.com/api/admin/run-etl)
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" = "200" ]; then
+            echo "✅ ETL sync completed successfully"
+            echo "$body" | grep -o '"message":"[^"]*"' || true
+          else
+            echo "❌ ETL sync failed"
+            exit 1
+          fi
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "📊 ETL Job Summary:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Successfully synced receipts from Neon to MotherDuck" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "**Backend:** https://receipts-app-v1co.onrender.com" >> $GITHUB_STEP_SUMMARY
