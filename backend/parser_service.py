@@ -255,19 +255,45 @@ def parse_receipt_images_multi(images_bytes_list: list) -> dict:
         images.append(image)
         logger.info(f"Image {idx+1} loaded: {image.format} {image.size}")
 
-    # Multi-image prompt
+    # Multi-image prompt (combines instructions from single-image prompt)
     prompt = """You are analyzing MULTIPLE images of the SAME receipt (a long receipt split into parts).
 
 IMPORTANT:
-- These images are of the SAME receipt
-- Combine ALL items from all images
-- Use store/date/total from the image that has it (usually top or bottom)
-- Merge items lists from all images
-- Remove duplicate items
+- These images are of the SAME receipt (captured while scrolling down)
+- Combine ALL items from all images into ONE list
+- Use store/date/total from the image that has it (usually first or last image)
+- Merge items lists from all images - DO NOT duplicate items
+- If same item appears in multiple images, include it ONCE
 
-Extract and MERGE data from all images following the same JSON structure.
+LANGUAGE & INTELLIGENT CORRECTION:
+- This is a GERMAN receipt from Germany
+- Apply German language knowledge to fix typos
+- Common items: Apfel, Milch, Brot, Käse, Butter, etc.
 
-""" + RECEIPT_PARSING_PROMPT.split("Return as structured JSON:")[1]
+CATEGORIZATION (for each item):
+- Classify into: Dairy Products, Meat & Fish, Fruits & Vegetables, Bakery, Beverages, Snacks & Sweets, Frozen Foods, Pantry & Staples, or Household & Other
+- Also provide subcategory
+
+Return as structured JSON with ALL fields:
+{
+  "store": {"name": "", "address": {...}},
+  "receipt": {"date": "YYYY-MM-DD", "time": "HH:MM:SS", ...},
+  "items": [
+    {
+      "name": "",
+      "quantity": 1.0,
+      "unit_price": 0.0,
+      "total_price": 0.0,
+      "category": "",
+      "subcategory": ""
+    }
+  ],
+  "totals": {"currency": "EUR", "sum": 0.0, ...},
+  "payment": {...},
+  "tax": {...}
+}
+
+Extract ALL items from ALL images and merge into single items array."""
 
     try:
         model = genai.GenerativeModel('gemini-2.5-flash')
