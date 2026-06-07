@@ -50,22 +50,38 @@ async def startup_event():
 
 
 @app.post("/api/upload")
-async def upload_receipt(files: List[UploadFile] = File(...), user_id: str = Form(None)):
+async def upload_receipt(
+    files: List[UploadFile] = File(None),
+    file: UploadFile = File(None),
+    user_id: str = Form(None)
+):
     """
     Web frontend upload endpoint (supports multiple images for long receipts).
 
     Accepts one or more image files, processes with Gemini Vision,
     stores in database, and returns structured data.
+
+    Backward compatible: accepts both 'file' (single) and 'files' (multiple)
     """
     logger.info("=== WEB UPLOAD CALLED ===")
     logger.info(f"User ID: {user_id}")
-    logger.info(f"Number of images: {len(files)}")
 
     try:
+        # Collect all uploaded files
+        upload_files = []
+        if files and files[0]:  # New format: multiple files
+            upload_files = files
+        elif file:  # Old format: single file
+            upload_files = [file]
+        else:
+            raise HTTPException(status_code=400, detail="No image files provided")
+
+        logger.info(f"Number of images: {len(upload_files)}")
+
         # Read all image bytes
         images_bytes = []
-        for file in files:
-            image_bytes = await file.read()
+        for f in upload_files:
+            image_bytes = await f.read()
             images_bytes.append(image_bytes)
             logger.info(f"Image received: {len(image_bytes)} bytes")
 
