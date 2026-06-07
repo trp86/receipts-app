@@ -1,10 +1,17 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from parser_service import parse_receipt_image, parse_receipt_images_multi
 from db_service import init_database, insert_receipt
 from motherduck_service import init_star_schema
 from etl_job import run_etl
-from typing import List
+from analytics_service import (
+    get_user_summary,
+    get_spending_by_category,
+    get_spending_by_month,
+    get_top_stores,
+    get_recent_receipts
+)
+from typing import List, Optional
 import logging
 import sys
 import os
@@ -234,3 +241,69 @@ async def health_check():
         health["status"] = "degraded"
 
     return health
+
+
+# Analytics Endpoints
+
+@app.get("/api/analytics/summary")
+async def analytics_summary(user_id: Optional[str] = Query(None)):
+    """Get overall spending summary."""
+    try:
+        data = get_user_summary(user_id)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Analytics summary failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/by-category")
+async def analytics_by_category(user_id: Optional[str] = Query(None)):
+    """Get spending breakdown by category."""
+    try:
+        data = get_spending_by_category(user_id)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Analytics by category failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/by-month")
+async def analytics_by_month(
+    user_id: Optional[str] = Query(None),
+    months: int = Query(6, ge=1, le=24)
+):
+    """Get monthly spending trend."""
+    try:
+        data = get_spending_by_month(user_id, months)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Analytics by month failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/top-stores")
+async def analytics_top_stores(
+    user_id: Optional[str] = Query(None),
+    limit: int = Query(5, ge=1, le=20)
+):
+    """Get top stores by spending."""
+    try:
+        data = get_top_stores(user_id, limit)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Analytics top stores failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/recent")
+async def analytics_recent(
+    user_id: Optional[str] = Query(None),
+    limit: int = Query(10, ge=1, le=50)
+):
+    """Get recent receipts."""
+    try:
+        data = get_recent_receipts(user_id, limit)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Analytics recent receipts failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
