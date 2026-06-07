@@ -67,16 +67,19 @@ def init_database():
         cursor.execute("""
             DO $$
             BEGIN
+                -- Add user_id column
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                               WHERE table_name='receipts' AND column_name='user_id') THEN
                     ALTER TABLE receipts ADD COLUMN user_id VARCHAR(255);
                 END IF;
 
+                -- Add synced_to_dwh column
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                               WHERE table_name='receipts' AND column_name='synced_to_dwh') THEN
                     ALTER TABLE receipts ADD COLUMN synced_to_dwh BOOLEAN DEFAULT FALSE;
                 END IF;
 
+                -- Add synced_at column
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                               WHERE table_name='receipts' AND column_name='synced_at') THEN
                     ALTER TABLE receipts ADD COLUMN synced_at TIMESTAMP;
@@ -84,7 +87,12 @@ def init_database():
             END $$;
         """)
 
-        # Step 3: Create indexes
+        # Step 3: Make chat_id nullable (remove NOT NULL constraint)
+        cursor.execute("""
+            ALTER TABLE receipts ALTER COLUMN chat_id DROP NOT NULL;
+        """)
+
+        # Step 4: Create indexes
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_chat_id ON receipts(chat_id);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_id ON receipts(user_id);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_date ON receipts(date);")
