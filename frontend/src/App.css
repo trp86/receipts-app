@@ -694,6 +694,147 @@ button:disabled {
   margin: 0 0 1rem 0;
 }
 
+/* Receipt Tips */
+.receipt-tips {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.tips-toggle {
+  background: rgba(6, 182, 212, 0.1);
+  color: #06b6d4;
+  border: 1px solid #06b6d4;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tips-toggle:hover {
+  background: rgba(6, 182, 212, 0.2);
+}
+
+.tips-content {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: rgba(6, 182, 212, 0.05);
+  border-radius: 12px;
+  text-align: left;
+}
+
+.tips-content p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #2d3748;
+}
+
+/* Photos Collected Counter */
+.photos-collected {
+  text-align: center;
+  padding: 0.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.photos-collected p {
+  margin: 0;
+  color: #10b981;
+  font-weight: 600;
+}
+
+/* Captured Photos Preview */
+.captured-photos-preview {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: rgba(6, 182, 212, 0.05);
+  border-radius: 12px;
+}
+
+.captured-photos-preview p {
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+  color: #06b6d4;
+}
+
+.photo-thumbnails {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.thumbnail {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #06b6d4;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.remove-thumb {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.remove-thumb:hover {
+  background: rgba(220, 38, 38, 1);
+}
+
+/* Multi-Photo Controls */
+.preview-controls-multi {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.btn-add-photo {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-add-photo:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+}
+
+.btn-add-photo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Mobile Responsive */
 @media (max-width: 640px) {
   .app-header h1 {

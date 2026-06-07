@@ -5,11 +5,13 @@ function Camera({ onCapture, isProcessing }) {
   const webcamRef = useRef(null);
   const fileInputRef = useRef(null);
   const [hasPermission, setHasPermission] = useState(null);
-  const [capturedImage, setCapturedImage] = useState(null);
+  const [capturedImages, setCapturedImages] = useState([]);
+  const [currentImage, setCurrentImage] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [cameraAttempt, setCameraAttempt] = useState(0);
   const [cameraHint, setCameraHint] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [showTips, setShowTips] = useState(false);
 
   // Detect if device is mobile
   useEffect(() => {
@@ -77,29 +79,52 @@ function Camera({ onCapture, isProcessing }) {
 
     setTimeout(() => {
       const imageSrc = webcamRef.current.getScreenshot();
-      setCapturedImage(imageSrc);
+      setCurrentImage(imageSrc);
       setIsCapturing(false);
     }, 150);
   };
 
+  const handleAddPhoto = () => {
+    if (currentImage) {
+      setCapturedImages([...capturedImages, currentImage]);
+      setCurrentImage(null);
+      setShowTips(false);
+    }
+  };
+
   const handleConfirm = () => {
-    if (capturedImage) {
-      onCapture(capturedImage);
+    // Combine all images
+    const allImages = currentImage ? [...capturedImages, currentImage] : capturedImages;
+    if (allImages.length > 0) {
+      onCapture(allImages);
     }
   };
 
   const handleRetake = () => {
-    setCapturedImage(null);
+    setCurrentImage(null);
+  };
+
+  const handleRemovePhoto = (index) => {
+    setCapturedImages(capturedImages.filter((_, i) => i !== index));
+  };
+
+  const handleStartOver = () => {
+    setCapturedImages([]);
+    setCurrentImage(null);
   };
 
   const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCapturedImage(e.target.result);
-      };
-      reader.readAsDataURL(file);
+    const files = Array.from(event.target.files);
+    if (files.length > 0) {
+      files.forEach(file => {
+        if (file && file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            setCurrentImage(e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
+      });
     }
   };
 
@@ -147,8 +172,35 @@ function Camera({ onCapture, isProcessing }) {
 
   return (
     <div className="camera-container">
-      {!capturedImage ? (
+      {/* Show captured photos count */}
+      {capturedImages.length > 0 && !currentImage && (
+        <div className="photos-collected">
+          <p>📸 {capturedImages.length} photo{capturedImages.length > 1 ? 's' : ''} collected</p>
+        </div>
+      )}
+
+      {!currentImage ? (
         <>
+          {/* Long receipt tips */}
+          {hasPermission && (
+            <div className="receipt-tips">
+              <button
+                onClick={() => setShowTips(!showTips)}
+                className="tips-toggle"
+              >
+                💡 Tips for Long Receipts
+              </button>
+              {showTips && (
+                <div className="tips-content">
+                  <p>✓ Step back 2-3 meters from receipt</p>
+                  <p>✓ Hold phone horizontally (landscape)</p>
+                  <p>✓ For very long receipts: capture top half, then bottom half</p>
+                  <p>✓ Or fold receipt accordion-style</p>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="camera-view">
             {hasPermission === null && (
               <div className="camera-loading">
@@ -196,6 +248,7 @@ function Camera({ onCapture, isProcessing }) {
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              multiple
               onChange={handleFileSelect}
               style={{ display: 'none' }}
             />
@@ -203,23 +256,67 @@ function Camera({ onCapture, isProcessing }) {
         </>
       ) : (
         <>
+          {/* Show previously captured images */}
+          {capturedImages.length > 0 && (
+            <div className="captured-photos-preview">
+              <p>Previous photos ({capturedImages.length}):</p>
+              <div className="photo-thumbnails">
+                {capturedImages.map((img, index) => (
+                  <div key={index} className="thumbnail">
+                    <img src={img} alt={`Photo ${index + 1}`} />
+                    <button
+                      onClick={() => handleRemovePhoto(index)}
+                      className="remove-thumb"
+                      disabled={isProcessing}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button onClick={handleRetake} className="btn-retake-corner" disabled={isProcessing} title="Retake">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/>
             </svg>
           </button>
+
           <div className="preview">
-            <img src={capturedImage} alt="Captured receipt" />
+            <img src={currentImage} alt="Captured receipt" />
           </div>
-          <div className="preview-controls-lens">
-            <button onClick={handleConfirm} className="btn-confirm-large" disabled={isProcessing}>
-              ✅ Use This Image
+
+          <div className="preview-controls-multi">
+            {capturedImages.length > 0 && (
+              <button
+                onClick={handleStartOver}
+                className="btn-secondary"
+                disabled={isProcessing}
+              >
+                🔄 Start Over
+              </button>
+            )}
+            <button
+              onClick={handleAddPhoto}
+              className="btn-add-photo"
+              disabled={isProcessing}
+            >
+              ➕ Add Another Photo
+            </button>
+            <button
+              onClick={handleConfirm}
+              className="btn-confirm-large"
+              disabled={isProcessing}
+            >
+              ✅ Process Receipt{capturedImages.length > 0 ? ` (${capturedImages.length + 1} photos)` : ''}
             </button>
           </div>
+
           {isProcessing && (
             <div className="processing-overlay">
               <div className="spinner"></div>
-              <p>Processing receipt...</p>
+              <p>Processing {capturedImages.length + 1} photo{capturedImages.length > 0 ? 's' : ''}...</p>
             </div>
           )}
         </>

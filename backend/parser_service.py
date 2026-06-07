@@ -226,3 +226,71 @@ EXTRACTION INSTRUCTIONS - EXTRACT EVERYTHING:
     except Exception as e:
         logger.error(f"Receipt parsing failed: {e}")
         raise Exception(f"Receipt parsing failed: {e}")
+
+
+def parse_receipt_images_multi(images_bytes_list: list) -> dict:
+    """
+    Parse multiple receipt images (for long receipts).
+
+    Args:
+        images_bytes_list: List of image bytes
+
+    Returns:
+        dict: Merged receipt data from all images
+    """
+    logger.info(f"Starting multi-image receipt parsing ({len(images_bytes_list)} images)")
+
+    google_api_key = os.getenv("GOOGLE_API_KEY")
+    if not google_api_key:
+        logger.error("GOOGLE_API_KEY not set in environment")
+        raise Exception("GOOGLE_API_KEY not configured")
+
+    # Configure Gemini
+    genai.configure(api_key=google_api_key)
+
+    # Convert all bytes to PIL Images
+    images = []
+    for idx, image_bytes in enumerate(images_bytes_list):
+        image = Image.open(io.BytesIO(image_bytes))
+        images.append(image)
+        logger.info(f"Image {idx+1} loaded: {image.format} {image.size}")
+
+    # Multi-image prompt
+    prompt = """You are analyzing MULTIPLE images of the SAME receipt (a long receipt split into parts).
+
+IMPORTANT:
+- These images are of the SAME receipt
+- Combine ALL items from all images
+- Use store/date/total from the image that has it (usually top or bottom)
+- Merge items lists from all images
+- Remove duplicate items
+
+Extract and MERGE data from all images following the same JSON structure.
+
+""" + RECEIPT_PARSING_PROMPT.split("Return as structured JSON:")[1]
+
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash')
+
+        # Single API call with all images
+        logger.info(f"Calling Gemini with {len(images)} images...")
+        content = [prompt] + images
+        response = model.generate_content(content)
+        llm_output = response.text.strip()
+
+        logger.info(f"Gemini response: {llm_output[:200]}...")
+
+        # Parse JSON
+        if llm_output.startswith("```json"):
+            llm_output = llm_output.replace("```json", "").replace("```", "").strip()
+        elif llm_output.startswith("```"):
+            llm_output = llm_output.replace("```", "").strip()
+
+        parsed_data = json.loads(llm_output)
+        logger.info(f"Parsed multi-image receipt: {len(parsed_data.get('items', []))} items")
+
+        return parsed_data
+
+    except Exception as e:
+        logger.error(f"Multi-image parsing failed: {e}")
+        raise Exception(f"Multi-image parsing failed: {e}")

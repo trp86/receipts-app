@@ -1,9 +1,10 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
-from parser_service import parse_receipt_image
+from parser_service import parse_receipt_image, parse_receipt_images_multi
 from db_service import init_database, insert_receipt
 from motherduck_service import init_star_schema
 from etl_job import run_etl
+from typing import List
 import logging
 import sys
 import os
@@ -49,23 +50,33 @@ async def startup_event():
 
 
 @app.post("/api/upload")
-async def upload_receipt(file: UploadFile = File(...), user_id: str = None):
+async def upload_receipt(files: List[UploadFile] = File(...), user_id: str = Form(None)):
     """
-    Web frontend upload endpoint.
+    Web frontend upload endpoint (supports multiple images for long receipts).
 
-    Accepts image file, processes with Gemini Vision,
+    Accepts one or more image files, processes with Gemini Vision,
     stores in database, and returns structured data.
     """
     logger.info("=== WEB UPLOAD CALLED ===")
     logger.info(f"User ID: {user_id}")
+    logger.info(f"Number of images: {len(files)}")
 
     try:
-        # Read image bytes
-        image_bytes = await file.read()
-        logger.info(f"Image received: {len(image_bytes)} bytes")
+        # Read all image bytes
+        images_bytes = []
+        for file in files:
+            image_bytes = await file.read()
+            images_bytes.append(image_bytes)
+            logger.info(f"Image received: {len(image_bytes)} bytes")
 
-        # Parse image with Gemini Vision (now includes categories)
-        receipt_data = parse_receipt_image(image_bytes)
+        # Parse images with Gemini Vision
+        if len(images_bytes) == 1:
+            # Single image - use original method
+            receipt_data = parse_receipt_image(images_bytes[0])
+        else:
+            # Multiple images - merge data
+            receipt_data = parse_receipt_images_multi(images_bytes)
+
         logger.info(f"Vision parsing complete!")
         logger.info(f"Structured receipt data: {receipt_data}")
 

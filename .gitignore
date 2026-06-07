@@ -49,3 +49,6 @@ htmlcov/
 
 # Render
 .render/
+
+# Local Netlify folder
+.netlify
