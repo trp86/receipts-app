@@ -328,6 +328,23 @@
   transform: scale(0.95);
 }
 
+.btn-capture-lens.capturing {
+  background: #ef4444;
+  border-color: #dc2626;
+  animation: pulse-recording 0.8s infinite;
+}
+
+@keyframes pulse-recording {
+  0%, 100% {
+    box-shadow: 0 6px 24px rgba(239, 68, 68, 0.6),
+                0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(239, 68, 68, 0.6),
+                0 0 0 15px rgba(239, 68, 68, 0);
+  }
+}
+
 @keyframes pulse-ring {
   0%, 100% {
     box-shadow: 0 6px 24px rgba(6, 182, 212, 0.4),
@@ -742,6 +759,33 @@ button:disabled {
   margin: 0;
   color: #10b981;
   font-weight: 600;
+}
+
+/* Scroll Capture Indicator */
+.scroll-capture-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  z-index: 100;
+  animation: pulse-glow 1s ease-in-out infinite;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 40px rgba(239, 68, 68, 0.5);
+}
+
+.scroll-capture-indicator p {
+  margin: 0.25rem 0;
+  font-weight: 600;
+}
+
+.scroll-capture-indicator p:first-child {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
 }
 
 /* Captured Photos Preview */

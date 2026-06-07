@@ -12,6 +12,8 @@ function Camera({ onCapture, isProcessing }) {
   const [cameraHint, setCameraHint] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [showTips, setShowTips] = useState(false);
+  const [isScrollCapturing, setIsScrollCapturing] = useState(false);
+  const [scrollCaptureInterval, setScrollCaptureInterval] = useState(null);
 
   // Detect if device is mobile
   useEffect(() => {
@@ -83,6 +85,50 @@ function Camera({ onCapture, isProcessing }) {
       setIsCapturing(false);
     }, 150);
   };
+
+  const startScrollCapture = () => {
+    console.log('Starting scroll capture...');
+    setIsScrollCapturing(true);
+
+    // Immediate first capture
+    const imageSrc = webcamRef.current.getScreenshot();
+    setCapturedImages([imageSrc]);
+
+    // Auto-capture every 800ms while holding
+    const interval = setInterval(() => {
+      const img = webcamRef.current.getScreenshot();
+      setCapturedImages(prev => [...prev, img]);
+
+      // Visual feedback
+      setIsCapturing(true);
+      setTimeout(() => setIsCapturing(false), 100);
+    }, 800);
+
+    setScrollCaptureInterval(interval);
+  };
+
+  const stopScrollCapture = () => {
+    console.log('Stopping scroll capture...');
+    if (scrollCaptureInterval) {
+      clearInterval(scrollCaptureInterval);
+      setScrollCaptureInterval(null);
+    }
+    setIsScrollCapturing(false);
+
+    // Show preview of all captured images
+    if (capturedImages.length > 0) {
+      setCurrentImage(capturedImages[capturedImages.length - 1]);
+    }
+  };
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollCaptureInterval) {
+        clearInterval(scrollCaptureInterval);
+      }
+    };
+  }, [scrollCaptureInterval]);
 
   const handleAddPhoto = () => {
     if (currentImage) {
@@ -192,10 +238,16 @@ function Camera({ onCapture, isProcessing }) {
               </button>
               {showTips && (
                 <div className="tips-content">
+                  <p><strong>📱 Scroll Capture Mode:</strong></p>
+                  <p>✓ Hold capture button (don't release!)</p>
+                  <p>✓ Slowly scroll camera down the receipt</p>
+                  <p>✓ Camera auto-captures frames</p>
+                  <p>✓ Release when done - all frames merged!</p>
+                  <p></p>
+                  <p><strong>📸 Single Photo Tips:</strong></p>
                   <p>✓ Step back 2-3 meters from receipt</p>
                   <p>✓ Hold phone horizontally (landscape)</p>
-                  <p>✓ For very long receipts: capture top half, then bottom half</p>
-                  <p>✓ Or fold receipt accordion-style</p>
+                  <p>✓ Ensure good lighting</p>
                 </div>
               )}
             </div>
@@ -234,9 +286,27 @@ function Camera({ onCapture, isProcessing }) {
               </div>
             )}
             {isCapturing && <div className="capture-flash"></div>}
+
+            {/* Scroll capture indicator */}
+            {isScrollCapturing && (
+              <div className="scroll-capture-indicator">
+                <p>🎥 SCROLL CAPTURE MODE</p>
+                <p>{capturedImages.length} frames captured</p>
+                <p>Release to finish</p>
+              </div>
+            )}
           </div>
           <div className="camera-controls-lens">
-            <button onClick={capturePhoto} className="btn-capture-lens" title="Capture">
+            <button
+              onMouseDown={startScrollCapture}
+              onMouseUp={stopScrollCapture}
+              onMouseLeave={stopScrollCapture}
+              onTouchStart={startScrollCapture}
+              onTouchEnd={stopScrollCapture}
+              onClick={capturePhoto}
+              className={`btn-capture-lens ${isScrollCapturing ? 'capturing' : ''}`}
+              title="Tap for photo, Hold to scroll capture"
+            >
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10"/>
               </svg>
