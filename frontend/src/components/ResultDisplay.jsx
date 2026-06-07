@@ -23,11 +23,19 @@ function ResultDisplay({ data, onReset }) {
 
         {data.items && data.items.length > 0 && (
           <div className="result-section">
-            <h3>Items</h3>
+            <h3>Items ({data.items.length})</h3>
             <ul className="items-list">
               {data.items.map((item, index) => (
                 <li key={index} className="item-row">
-                  <span className="item-name">{item.name}</span>
+                  <div className="item-info">
+                    <span className="item-name">{item.name}</span>
+                    {item.category && (
+                      <span className="item-category">
+                        {item.category}
+                        {item.subcategory && ` / ${item.subcategory}`}
+                      </span>
+                    )}
+                  </div>
                   <span className="item-price">€{item.price}</span>
                 </li>
               ))}
