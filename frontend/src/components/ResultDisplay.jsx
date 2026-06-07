@@ -28,11 +28,21 @@ function ResultDisplay({ data, onReset }) {
               {data.items.map((item, index) => (
                 <li key={index} className="item-row">
                   <div className="item-info">
-                    <span className="item-name">{item.name}</span>
+                    <div className="item-name-qty">
+                      <span className="item-name">{item.name}</span>
+                      {item.quantity && item.quantity > 1 && (
+                        <span className="item-quantity">×{item.quantity}</span>
+                      )}
+                    </div>
                     {item.category && (
                       <span className="item-category">
                         {item.category}
                         {item.subcategory && ` / ${item.subcategory}`}
+                      </span>
+                    )}
+                    {item.quantity && item.quantity > 1 && item.unit_price && (
+                      <span className="item-unit-price">
+                        €{item.unit_price} each
                       </span>
                     )}
                   </div>

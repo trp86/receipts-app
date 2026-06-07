@@ -110,6 +110,9 @@ async def upload_receipt(
                 "items": [
                     {
                         "name": item.get("name", ""),
+                        "quantity": item.get("quantity", 1.0),
+                        "unit": item.get("unit", ""),
+                        "unit_price": str(item.get("unit_price", 0.0)),
                         "price": str(item.get("total_price", 0.0)),
                         "category": item.get("category", ""),
                         "subcategory": item.get("subcategory", "")
