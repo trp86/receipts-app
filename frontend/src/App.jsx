@@ -2,11 +2,12 @@ import { useState } from 'react';
 import Camera from './components/Camera';
 import ResultDisplay from './components/ResultDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
+import Analytics from './components/Analytics';
 import { uploadReceipt } from './services/api';
 import './App.css';
 
 function App() {
-  const [view, setView] = useState('camera'); // 'camera' | 'loading' | 'result'
+  const [view, setView] = useState('camera'); // 'camera' | 'loading' | 'result' | 'analytics'
   const [receiptData, setReceiptData] = useState(null);
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,6 +47,20 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>📸 Receipt Scanner</h1>
+        <nav className="app-nav">
+          <button
+            className={view === 'camera' || view === 'result' ? 'active' : ''}
+            onClick={() => setView('camera')}
+          >
+            📷 Scan
+          </button>
+          <button
+            className={view === 'analytics' ? 'active' : ''}
+            onClick={() => setView('analytics')}
+          >
+            📊 Analytics
+          </button>
+        </nav>
       </header>
 
       <main className="app-main">
@@ -59,6 +74,10 @@ function App() {
 
         {view === 'result' && receiptData && (
           <ResultDisplay data={receiptData} onReset={handleReset} />
+        )}
+
+        {view === 'analytics' && (
+          <Analytics />
         )}
 
         {error && (

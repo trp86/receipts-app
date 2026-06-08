@@ -38,3 +38,34 @@ export const uploadReceipt = async (imageData) => {
     throw error;
   }
 };
+
+// Analytics API functions
+export const getAnalyticsSummary = async (userId = null) => {
+  const params = userId ? { user_id: userId } : {};
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/summary`, { params });
+  return result.data;
+};
+
+export const getSpendingByCategory = async (userId = null) => {
+  const params = userId ? { user_id: userId } : {};
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/by-category`, { params });
+  return result.data;
+};
+
+export const getSpendingByMonth = async (userId = null, months = 6) => {
+  const params = userId ? { user_id: userId, months } : { months };
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/by-month`, { params });
+  return result.data;
+};
+
+export const getTopStores = async (userId = null, limit = 5) => {
+  const params = userId ? { user_id: userId, limit } : { limit };
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/top-stores`, { params });
+  return result.data;
+};
+
+export const getRecentReceipts = async (userId = null, limit = 10) => {
+  const params = userId ? { user_id: userId, limit } : { limit };
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/recent`, { params });
+  return result.data;
+};
