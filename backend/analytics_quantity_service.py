@@ -264,9 +264,9 @@ def get_unit_price_insights(user_id: str = None, limit: int = 10):
                 "avg_unit_price": round(float(row[2]), 2) if row[2] else 0.0,
                 "best_price": round(float(row[3]), 2) if row[3] else 0.0,
                 "highest_price": round(float(row[4]), 2) if row[4] else 0.0,
-                "price_variation": round(float(row[4] - row[3]), 2) if row[3] and row[4] else 0.0,
+                "price_variation": round((float(row[4]) - float(row[3])), 2) if row[3] and row[4] else 0.0,
                 "times_purchased": int(row[5]) if row[5] else 0,
-                "potential_savings": round((float(row[2] - row[3]) * float(row[6])), 2) if row[2] and row[3] and row[6] else 0.0
+                "potential_savings": round((float(row[2]) - float(row[3])) * float(row[6]), 2) if row[2] and row[3] and row[6] else 0.0
             }
             for row in results
         ]
