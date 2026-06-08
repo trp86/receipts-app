@@ -148,7 +148,7 @@ function QuantityAnalytics() {
                     </span>
                   </div>
                   <p className="bulk-item-spent">
-                    Total spent: <strong>${item.total_spent.toFixed(2)}</strong>
+                    Total spent: <strong>€{item.total_spent.toFixed(2)}</strong>
                   </p>
                 </div>
               </div>
@@ -200,16 +200,16 @@ function QuantityAnalytics() {
                   <tr key={index}>
                     <td className="item-name">{item.item_name}</td>
                     <td>{item.category}</td>
-                    <td className="price-best">${item.best_price.toFixed(2)}</td>
-                    <td>${item.avg_unit_price.toFixed(2)}</td>
-                    <td className="price-high">${item.highest_price.toFixed(2)}</td>
+                    <td className="price-best">€{item.best_price.toFixed(2)}</td>
+                    <td>€{item.avg_unit_price.toFixed(2)}</td>
+                    <td className="price-high">€{item.highest_price.toFixed(2)}</td>
                     <td>
                       <span className="price-variation">
-                        ${item.price_variation.toFixed(2)}
+                        €{item.price_variation.toFixed(2)}
                       </span>
                     </td>
                     <td className="savings">
-                      ${item.potential_savings.toFixed(2)}
+                      €{item.potential_savings.toFixed(2)}
                     </td>
                   </tr>
                 ))}

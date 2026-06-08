@@ -121,7 +121,7 @@ function Analytics() {
           <div className="card-icon">💰</div>
           <div className="card-content">
             <p className="card-label">Total Spent</p>
-            <p className="card-value">${summary?.total_spent?.toFixed(2) || '0.00'}</p>
+            <p className="card-value">€{summary?.total_spent?.toFixed(2) || '0.00'}</p>
           </div>
         </div>
 
@@ -137,7 +137,7 @@ function Analytics() {
           <div className="card-icon">📊</div>
           <div className="card-content">
             <p className="card-label">Avg Receipt</p>
-            <p className="card-value">${summary?.avg_receipt?.toFixed(2) || '0.00'}</p>
+            <p className="card-value">€{summary?.avg_receipt?.toFixed(2) || '0.00'}</p>
           </div>
         </div>
       </div>
@@ -151,7 +151,7 @@ function Analytics() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => `€€{value.toFixed(2)}`} />
               <Legend />
               <Line
                 type="monotone"
@@ -179,13 +179,13 @@ function Analytics() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={(entry) => `${entry.category}: $${entry.total_spent.toFixed(2)}`}
+                  label={(entry) => `€{entry.category}: €€{entry.total_spent.toFixed(2)}`}
                 >
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-€{index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                <Tooltip formatter={(value) => `€€{value.toFixed(2)}`} />
               </PieChart>
             </ResponsiveContainer>
 
@@ -194,7 +194,7 @@ function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="category" />
                 <YAxis />
-                <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+                <Tooltip formatter={(value) => `€€{value.toFixed(2)}`} />
                 <Bar dataKey="total_spent" fill="#82ca9d" name="Total Spent" />
               </BarChart>
             </ResponsiveContainer>
@@ -211,7 +211,7 @@ function Analytics() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
               <YAxis dataKey="store_name" type="category" width={150} />
-              <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => `€€{value.toFixed(2)}`} />
               <Bar dataKey="total_spent" fill="#0088FE" name="Total Spent" />
             </BarChart>
           </ResponsiveContainer>
@@ -238,7 +238,7 @@ function Analytics() {
                     <td>{receipt.date}</td>
                     <td>{receipt.store_name}</td>
                     <td>{receipt.item_count}</td>
-                    <td>${receipt.total_amount.toFixed(2)}</td>
+                    <td>€{receipt.total_amount.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
