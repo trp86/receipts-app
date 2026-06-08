@@ -69,3 +69,34 @@ export const getRecentReceipts = async (userId = null, limit = 10) => {
   const result = await axios.get(`${API_BASE_URL}/api/analytics/recent`, { params });
   return result.data;
 };
+
+// Quantity Analytics API functions
+export const getQuantitySummary = async (userId = null) => {
+  const params = userId ? { user_id: userId } : {};
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/quantity/summary`, { params });
+  return result.data;
+};
+
+export const getTopBulkItems = async (userId = null, limit = 10) => {
+  const params = userId ? { user_id: userId, limit } : { limit };
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/quantity/bulk-items`, { params });
+  return result.data;
+};
+
+export const getQuantityByCategory = async (userId = null) => {
+  const params = userId ? { user_id: userId } : {};
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/quantity/by-category`, { params });
+  return result.data;
+};
+
+export const getUnitPriceInsights = async (userId = null, limit = 10) => {
+  const params = userId ? { user_id: userId, limit } : { limit };
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/quantity/unit-prices`, { params });
+  return result.data;
+};
+
+export const getQuantityTrends = async (userId = null, months = 6) => {
+  const params = userId ? { user_id: userId, months } : { months };
+  const result = await axios.get(`${API_BASE_URL}/api/analytics/quantity/trends`, { params });
+  return result.data;
+};

@@ -11,6 +11,13 @@ from analytics_service import (
     get_top_stores,
     get_recent_receipts
 )
+from analytics_quantity_service import (
+    get_bulk_purchase_summary,
+    get_top_bulk_items,
+    get_avg_quantity_by_category,
+    get_unit_price_insights,
+    get_quantity_trends
+)
 from typing import List, Optional
 import logging
 import sys
@@ -306,4 +313,70 @@ async def analytics_recent(
         return {"success": True, "data": data}
     except Exception as e:
         logger.error(f"Analytics recent receipts failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Quantity Analytics Endpoints
+
+@app.get("/api/analytics/quantity/summary")
+async def quantity_summary(user_id: Optional[str] = Query(None)):
+    """Get bulk purchase summary."""
+    try:
+        data = get_bulk_purchase_summary(user_id)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Quantity summary failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/quantity/bulk-items")
+async def quantity_bulk_items(
+    user_id: Optional[str] = Query(None),
+    limit: int = Query(10, ge=1, le=50)
+):
+    """Get top items bought in bulk."""
+    try:
+        data = get_top_bulk_items(user_id, limit)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Bulk items query failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/quantity/by-category")
+async def quantity_by_category(user_id: Optional[str] = Query(None)):
+    """Get average quantity by category."""
+    try:
+        data = get_avg_quantity_by_category(user_id)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Quantity by category failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/quantity/unit-prices")
+async def quantity_unit_prices(
+    user_id: Optional[str] = Query(None),
+    limit: int = Query(10, ge=1, le=50)
+):
+    """Get unit price insights."""
+    try:
+        data = get_unit_price_insights(user_id, limit)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Unit price insights failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/analytics/quantity/trends")
+async def quantity_trends(
+    user_id: Optional[str] = Query(None),
+    months: int = Query(6, ge=1, le=24)
+):
+    """Get quantity trends over time."""
+    try:
+        data = get_quantity_trends(user_id, months)
+        return {"success": True, "data": data}
+    except Exception as e:
+        logger.error(f"Quantity trends failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))

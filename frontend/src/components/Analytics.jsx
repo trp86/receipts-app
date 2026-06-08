@@ -10,11 +10,13 @@ import {
   getTopStores,
   getRecentReceipts
 } from '../services/api';
+import QuantityAnalytics from './QuantityAnalytics';
 import './Analytics.css';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
 function Analytics() {
+  const [activeTab, setActiveTab] = useState('spending'); // 'spending' | 'quantity'
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [categoryData, setCategoryData] = useState([]);
@@ -71,8 +73,46 @@ function Analytics() {
     );
   }
 
+  // Render quantity analytics tab
+  if (activeTab === 'quantity') {
+    return (
+      <div className="analytics-container">
+        <div className="analytics-tabs">
+          <button
+            className={activeTab === 'spending' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('spending')}
+          >
+            💰 Spending
+          </button>
+          <button
+            className={activeTab === 'quantity' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('quantity')}
+          >
+            📦 Quantity
+          </button>
+        </div>
+        <QuantityAnalytics />
+      </div>
+    );
+  }
+
   return (
     <div className="analytics-container">
+      <div className="analytics-tabs">
+        <button
+          className={activeTab === 'spending' ? 'tab active' : 'tab'}
+          onClick={() => setActiveTab('spending')}
+        >
+          💰 Spending
+        </button>
+        <button
+          className={activeTab === 'quantity' ? 'tab active' : 'tab'}
+          onClick={() => setActiveTab('quantity')}
+        >
+          📦 Quantity
+        </button>
+      </div>
+
       <h2>📊 Spending Analytics</h2>
 
       {/* Summary Cards */}
