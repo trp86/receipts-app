@@ -52,3 +52,7 @@ htmlcov/
 
 # Local Netlify folder
 .netlify
+
+# Local DuckDB files
+*.duckdb
+*.duckdb.wal
