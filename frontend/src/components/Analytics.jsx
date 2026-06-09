@@ -151,7 +151,7 @@ function Analytics() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
-              <Tooltip formatter={(value) => `€€{value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => `€${value.toFixed(2)}`} />
               <Legend />
               <Line
                 type="monotone"
@@ -179,13 +179,13 @@ function Analytics() {
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  label={(entry) => `€{entry.category}: €€{entry.total_spent.toFixed(2)}`}
+                  label={(entry) => `${entry.category}: €${entry.total_spent.toFixed(2)}`}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-€{index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `€€{value.toFixed(2)}`} />
+                <Tooltip formatter={(value) => `€${value.toFixed(2)}`} />
               </PieChart>
             </ResponsiveContainer>
 
@@ -194,7 +194,7 @@ function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="category" />
                 <YAxis />
-                <Tooltip formatter={(value) => `€€{value.toFixed(2)}`} />
+                <Tooltip formatter={(value) => `€${value.toFixed(2)}`} />
                 <Bar dataKey="total_spent" fill="#82ca9d" name="Total Spent" />
               </BarChart>
             </ResponsiveContainer>
@@ -211,7 +211,7 @@ function Analytics() {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
               <YAxis dataKey="store_name" type="category" width={150} />
-              <Tooltip formatter={(value) => `€€{value.toFixed(2)}`} />
+              <Tooltip formatter={(value) => `€${value.toFixed(2)}`} />
               <Bar dataKey="total_spent" fill="#0088FE" name="Total Spent" />
             </BarChart>
           </ResponsiveContainer>
